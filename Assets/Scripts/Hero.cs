@@ -7,6 +7,7 @@ public class Hero : MonoBehaviour
     [Header("Movement & Health")]    
     [SerializeField] float moveSpeed;
     [SerializeField] float jumpForce;
+    [SerializeField] float pushbackForce = 200f;
 
     [Header("Attack Attributes")]
     [SerializeField] float attackCD;
@@ -16,6 +17,7 @@ public class Hero : MonoBehaviour
     [SerializeField] BoxCollider2D swordCollider;
 
     // cached references
+    SessionManager sessionManager;
     CapsuleCollider2D capsuleCollider2D;
     new Rigidbody2D rigidbody2D;
     BoxCollider2D boxCollider2D;
@@ -25,11 +27,13 @@ public class Hero : MonoBehaviour
     string[] attackAnimations = { "attack", "attack2" };
     bool isGrounded;
     bool isFalling;
+    bool canMove = true;
     bool canAttack = true;
     #endregion
 
-    private void Awake()
+    void Awake()
     {
+        sessionManager = FindObjectOfType<SessionManager>();
         capsuleCollider2D = GetComponent<CapsuleCollider2D>();
         boxCollider2D = GetComponent<BoxCollider2D>();
         rigidbody2D = GetComponent<Rigidbody2D>();
@@ -43,7 +47,7 @@ public class Hero : MonoBehaviour
         ChekCharacterState();
     }
 
-    private void ChekCharacterState()
+    void ChekCharacterState()
     {
         isGrounded = boxCollider2D.IsTouchingLayers(LayerMask.GetMask("Foreground"));
         isFalling = rigidbody2D.velocity.y < -0.2f;
@@ -57,7 +61,7 @@ public class Hero : MonoBehaviour
             Attack();
         }
 
-        xInput = Input.GetAxisRaw("Horizontal");
+        xInput = canMove ? Input.GetAxisRaw("Horizontal") : 0;
         if (Input.GetAxisRaw("Horizontal") != 0)
         {
             transform.localScale = new Vector2(Input.GetAxisRaw("Horizontal"), 1);
@@ -67,7 +71,7 @@ public class Hero : MonoBehaviour
         UpdateAnimation();
     }
 
-    private void Attack()
+    void Attack()
     {
 
         // Cycle between attack animations
@@ -86,14 +90,8 @@ public class Hero : MonoBehaviour
         Invoke("ResetAttackTimer", attackCD);
     }
 
-    private void UpdateAnimation()
-    {
-        animator.SetBool("isRunning", xInput != 0 && isGrounded);
-        animator.SetBool("isGrounded", isGrounded);
-        animator.SetBool("isFalling", isFalling);
-    }
 
-    private void ResetAttackTimer()
+    void ResetAttackTimer()
     {
         canAttack = true;
         attackAnimationIndex = 0;
@@ -103,13 +101,19 @@ public class Hero : MonoBehaviour
     {
         swordCollider.enabled = false;
     }
+    void UpdateAnimation()
+    {
+        animator.SetBool("isRunning", xInput != 0 && isGrounded);
+        animator.SetBool("isGrounded", isGrounded);
+        animator.SetBool("isFalling", isFalling);
+    }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
         rigidbody2D.velocity = new Vector2(xInput, rigidbody2D.velocity.y);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.GetComponent<Enemy>())
         {
@@ -117,4 +121,25 @@ public class Hero : MonoBehaviour
             collision.GetComponent<Enemy>().TakeDamage(transform.localScale.x);
         }
     }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        {
+            animator.SetTrigger("Hurt");
+            rigidbody2D.AddForce(- Mathf.Sign(transform.localScale.x) * pushbackForce * Vector2.right);
+            canMove = false;            
+            sessionManager.TakeDamage();
+            Invoke("RsetMoveBool", 0.5f);
+        }        
+    }
+    void RsetMoveBool()
+    {
+        canMove = true;
+    }
+
+    public void Die()
+    {
+        animator.SetTrigger("Die");        
+    } 
 }

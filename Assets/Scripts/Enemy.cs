@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -31,6 +32,17 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         animator.SetInteger("animState", enemyRB.velocity.x == 0 ? 0 : 1);
+        CheckForPlayer();
+    }
+
+    private void CheckForPlayer()
+    {
+        Debug.DrawRay(new Vector2(transform.position.x, transform.position.y + 1), 5 * moveDirection * Vector2.right);
+        RaycastHit2D raycastHit2D = Physics2D.Raycast(new Vector2(transform.position.x, transform.position.y + 1), 5 * moveDirection * Vector2.right);
+        if(raycastHit2D.collider.gameObject.layer == 3)
+        {
+            Debug.Log("Player Found");
+        }        
     }
 
     private void FixedUpdate()
@@ -74,5 +86,10 @@ public class Enemy : MonoBehaviour
     private void ResetSpeed()
     {
         currentMoveSpeed = moveSpeed;
+    }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(new Vector2(transform.position.x, transform.position.y + 1), Vector2.right * moveDirection * 5);
     }
 }
