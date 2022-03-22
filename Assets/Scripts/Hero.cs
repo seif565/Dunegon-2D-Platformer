@@ -17,8 +17,7 @@ public class Hero : MonoBehaviour
     [SerializeField] BoxCollider2D swordCollider;
 
     // cached references
-    SessionManager sessionManager;
-    CapsuleCollider2D capsuleCollider2D;
+    SessionManager sessionManager;   
     new Rigidbody2D rigidbody2D;
     BoxCollider2D boxCollider2D;
     Animator animator;
@@ -33,8 +32,7 @@ public class Hero : MonoBehaviour
 
     void Awake()
     {
-        sessionManager = FindObjectOfType<SessionManager>();
-        capsuleCollider2D = GetComponent<CapsuleCollider2D>();
+        sessionManager = FindObjectOfType<SessionManager>();        
         boxCollider2D = GetComponent<BoxCollider2D>();
         rigidbody2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
@@ -116,8 +114,7 @@ public class Hero : MonoBehaviour
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.GetComponent<Enemy>())
-        {
-            Debug.Log("Enemy hit");
+        {            
             collision.GetComponent<Enemy>().TakeDamage(transform.localScale.x);
         }
     }
@@ -126,11 +123,14 @@ public class Hero : MonoBehaviour
     {
         if(collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
         {
-            animator.SetTrigger("Hurt");
-            rigidbody2D.AddForce(- Mathf.Sign(transform.localScale.x) * pushbackForce * Vector2.right);
-            canMove = false;            
             sessionManager.TakeDamage();
-            Invoke("RsetMoveBool", 0.5f);
+            if (canMove)
+            {
+                animator.SetTrigger("Hurt");
+                rigidbody2D.AddForce(-Mathf.Sign(transform.localScale.x) * pushbackForce * Vector2.right);
+                canMove = false;
+                Invoke("RsetMoveBool", 0.5f);
+            }
         }        
     }
     void RsetMoveBool()
@@ -140,6 +140,8 @@ public class Hero : MonoBehaviour
 
     public void Die()
     {
-        animator.SetTrigger("Die");        
+        animator.SetTrigger("Die");
+        rigidbody2D.bodyType = RigidbodyType2D.Static;
+        canMove = false;
     } 
 }

@@ -1,15 +1,14 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class SessionManager : MonoBehaviour
-{    
-    [SerializeField] Image healthImage;
-    [SerializeField] Canvas gameCanvas;
+{
+    GameUI gameUI;
     [SerializeField] [Range(0,10)] int startingHealth;
-    int currentHealth;
-    private void Awake()
+    int currentHealth;    
+    void Awake()
     {
+        gameUI = FindObjectOfType<GameUI>();
         if (FindObjectsOfType<SessionManager>().Length > 1)
         {
             Destroy(gameObject);            
@@ -18,26 +17,29 @@ public class SessionManager : MonoBehaviour
         else
         {
             DontDestroyOnLoad(gameObject);
-        }
-        DontDestroyOnLoad(gameCanvas);                
+        }                    
     }
     void Start()
     {
         currentHealth = startingHealth;
-        UpdateHealth();        
+        FindObjectOfType<GameUI>().UpdateUI(currentHealth);     
     }
 
-    private void UpdateHealth()
+    public int GetHealth()
     {
-        healthImage.rectTransform.sizeDelta = new Vector2(currentHealth <= 0 ? 0 : 100 * currentHealth, 100);
-        healthImage.rectTransform.localPosition = new Vector2
-            (healthImage.rectTransform.localPosition.x + (50 * currentHealth), healthImage.rectTransform.localPosition.y);
+        return currentHealth;
     }
+
+    
 
     public void TakeDamage(int damageAmount = 1)
     {
+        if(gameUI == null)
+        {
+            gameUI = FindObjectOfType<GameUI>();
+        }
         currentHealth -= damageAmount;
-        UpdateHealth();
+        gameUI.UpdateUI(currentHealth);
         if (currentHealth <= 0) {
             FindObjectOfType<Hero>().Die();
             Destroy(FindObjectOfType<Hero>().GetComponent<Hero>());
@@ -47,7 +49,7 @@ public class SessionManager : MonoBehaviour
     void ResetLevel()
     {
         currentHealth = startingHealth;
-        UpdateHealth();
+        gameUI.UpdateUI(startingHealth);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

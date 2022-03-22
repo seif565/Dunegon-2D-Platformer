@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    #region references
     //Serialized Params
     [Header("In-Game Params")]
     [SerializeField][Range(0,10)] float moveSpeed;
@@ -20,6 +21,7 @@ public class Enemy : MonoBehaviour
     [Header("Collision Params")]
     [SerializeField] BoxCollider2D groundCollider;
     [SerializeField] LayerMask ground;
+    #endregion
 
     private void Awake()
     {
@@ -35,15 +37,6 @@ public class Enemy : MonoBehaviour
         CheckForPlayer();
     }
 
-    private void CheckForPlayer()
-    {
-        Debug.DrawRay(new Vector2(transform.position.x, transform.position.y + 1), 5 * moveDirection * Vector2.right);
-        RaycastHit2D raycastHit2D = Physics2D.Raycast(new Vector2(transform.position.x, transform.position.y + 1), 5 * moveDirection * Vector2.right);
-        if(raycastHit2D.collider.gameObject.layer == 3)
-        {
-            Debug.Log("Player Found");
-        }        
-    }
 
     private void FixedUpdate()
     {
@@ -86,6 +79,17 @@ public class Enemy : MonoBehaviour
     private void ResetSpeed()
     {
         currentMoveSpeed = moveSpeed;
+    }
+
+    // WIP player detection
+    private void CheckForPlayer()
+    {
+        Debug.DrawRay(new Vector2(transform.position.x, transform.position.y + 1), 5 * moveDirection * Vector2.right);
+        RaycastHit2D raycastHit2D = Physics2D.Raycast(new Vector2(transform.position.x, transform.position.y + 1), 5 * moveDirection * Vector2.right);
+        if(raycastHit2D.collider.gameObject.layer == 3)
+        {
+            Debug.Log("Player Found");
+        }        
     }
     private void OnDrawGizmos()
     {
